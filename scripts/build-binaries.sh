@@ -90,17 +90,19 @@ fi
 
 if [[ "$SKIP_DEPS" == "false" ]]; then
     echo "==> Installing cross-platform native bindings..."
+    CLIPBOARD_VERSION=$(node -p "require('./packages/coding-agent/package.json').optionalDependencies['@mariozechner/clipboard']")
     # npm ci only installs optional deps for the current platform
-    # We need all platform bindings for bun cross-compilation
+    # We need the base clipboard package and all platform bindings for bun cross-compilation
     # Use --force to bypass platform checks (os/cpu restrictions in package.json)
     # Install all in one command to avoid npm removing packages from previous installs
-    npm install --no-save --package-lock=false --force --ignore-scripts \
-        @mariozechner/clipboard-darwin-arm64@0.3.6 \
-        @mariozechner/clipboard-darwin-x64@0.3.6 \
-        @mariozechner/clipboard-linux-x64-gnu@0.3.6 \
-        @mariozechner/clipboard-linux-arm64-gnu@0.3.6 \
-        @mariozechner/clipboard-win32-x64-msvc@0.3.6 \
-        @mariozechner/clipboard-win32-arm64-msvc@0.3.6
+    npm install --include=optional --no-save --package-lock=false --force --ignore-scripts \
+        @mariozechner/clipboard@"$CLIPBOARD_VERSION" \
+        @mariozechner/clipboard-darwin-arm64@"$CLIPBOARD_VERSION" \
+        @mariozechner/clipboard-darwin-x64@"$CLIPBOARD_VERSION" \
+        @mariozechner/clipboard-linux-x64-gnu@"$CLIPBOARD_VERSION" \
+        @mariozechner/clipboard-linux-arm64-gnu@"$CLIPBOARD_VERSION" \
+        @mariozechner/clipboard-win32-x64-msvc@"$CLIPBOARD_VERSION" \
+        @mariozechner/clipboard-win32-arm64-msvc@"$CLIPBOARD_VERSION"
 else
     echo "==> Skipping cross-platform native bindings (--skip-deps)"
 fi
@@ -157,26 +159,34 @@ for platform in "${PLATFORMS[@]}"; do
     case "$platform" in
         darwin-arm64)
             clipboard_native_package="clipboard-darwin-arm64"
+            clipboard_native_file="clipboard.darwin-arm64.node"
             ;;
         darwin-x64)
             clipboard_native_package="clipboard-darwin-x64"
+            clipboard_native_file="clipboard.darwin-x64.node"
             ;;
         linux-x64)
             clipboard_native_package="clipboard-linux-x64-gnu"
+            clipboard_native_file="clipboard.linux-x64-gnu.node"
             ;;
         linux-arm64)
             clipboard_native_package="clipboard-linux-arm64-gnu"
+            clipboard_native_file="clipboard.linux-arm64-gnu.node"
             ;;
         windows-x64)
             clipboard_native_package="clipboard-win32-x64-msvc"
+            clipboard_native_file="clipboard.win32-x64-msvc.node"
             ;;
         windows-arm64)
             clipboard_native_package="clipboard-win32-arm64-msvc"
+            clipboard_native_file="clipboard.win32-arm64-msvc.node"
             ;;
     esac
     mkdir -p "$OUTPUT_DIR/$platform/node_modules/@mariozechner"
     cp -r ../../node_modules/@mariozechner/clipboard "$OUTPUT_DIR/$platform/node_modules/@mariozechner/"
     cp -r ../../node_modules/@mariozechner/$clipboard_native_package "$OUTPUT_DIR/$platform/node_modules/@mariozechner/"
+    cp "../../node_modules/@mariozechner/$clipboard_native_package/$clipboard_native_file" \
+        "$OUTPUT_DIR/$platform/node_modules/@mariozechner/clipboard/"
 
     # Copy terminal input native helpers next to compiled binaries.
     if [[ "$platform" == darwin-* ]]; then

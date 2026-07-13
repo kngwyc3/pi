@@ -1,6 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { getModel, getModels } from "../src/models.ts";
-import { stream } from "../src/stream.ts";
+import { getModel, getModels, stream } from "../src/compat.ts";
 import type { Api, Context, Model, StreamOptions } from "../src/types.ts";
 
 type StreamOptionsWithExtras = StreamOptions & Record<string, unknown>;
@@ -295,10 +294,10 @@ describe("Token Statistics on Abort", () => {
 
 	describe("GitHub Copilot Provider", () => {
 		it.skipIf(!githubCopilotToken)(
-			"gpt-4o - should include token stats when aborted mid-stream",
+			"claude-haiku-4.5 - should include token stats when aborted mid-stream",
 			{ retry: 3, timeout: 30000 },
 			async () => {
-				const llm = getModel("github-copilot", "gpt-4o");
+				const llm = getModel("github-copilot", "claude-haiku-4.5");
 				await testTokensOnAbort(llm, { apiKey: githubCopilotToken });
 			},
 		);

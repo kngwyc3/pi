@@ -49,11 +49,30 @@ describe("isContextOverflow", () => {
 		expect(isContextOverflow(message, 131072)).toBe(true);
 	});
 
+	it("detects OpenAI-compatible parenthesized maximum context length errors", () => {
+		const message = createErrorMessage(
+			"Error: 400 Input length (265330) exceeds model's maximum context length (262144).",
+		);
+		expect(isContextOverflow(message, 262144)).toBe(true);
+	});
+
 	it("detects OpenRouter Poolside maximum allowed input length errors", () => {
 		const message = createErrorMessage(
 			"Provider returned error: Input length 131393 exceeds the maximum allowed input length of 131040 tokens.",
 		);
 		expect(isContextOverflow(message, 131072)).toBe(true);
+	});
+
+	it("detects DS4 configured context size errors", () => {
+		const message = createErrorMessage(
+			"400 Prompt has 256468 tokens, but the configured context size is 256000 tokens",
+		);
+		expect(isContextOverflow(message, 256000)).toBe(true);
+
+		const commaMessage = createErrorMessage(
+			"Prompt has 5,958,968 tokens, but the configured context size is 256,000 tokens",
+		);
+		expect(isContextOverflow(commaMessage, 256000)).toBe(true);
 	});
 
 	it("does not treat generic non-overflow Ollama errors as overflow", () => {
